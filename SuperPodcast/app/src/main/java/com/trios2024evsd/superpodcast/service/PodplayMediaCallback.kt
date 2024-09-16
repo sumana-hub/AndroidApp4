@@ -28,6 +28,14 @@ class PodplayMediaCallback(
         super.onPlayFromUri(uri, extras)
         println("Playing ${uri.toString()}")
 
+        if (mediaUri == uri) {
+            newMedia = false
+            mediaExtras = null
+        } else {
+            mediaExtras = extras
+            setNewMedia(uri)
+        }
+
         onPlay()
     }
 
@@ -56,6 +64,10 @@ class PodplayMediaCallback(
     }
     private fun setState(state: Int) {
         var position: Long = -1
+        mediaPlayer?.let {
+            position = it.currentPosition.toLong()
+        }
+
 
         val playbackState = PlaybackStateCompat.Builder()
             .setActions(
@@ -130,5 +142,34 @@ class PodplayMediaCallback(
         }
     }
 
+    private fun startPlaying() {
+        mediaPlayer?.let { mediaPlayer ->
+            if (!mediaPlayer.isPlaying) {
+                mediaPlayer.start()
+                setState(PlaybackStateCompat.STATE_PLAYING)
+            }
+        }
+    }
+
+    private fun pausePlaying() {
+        removeAudioFocus()
+        mediaPlayer?.let { mediaPlayer ->
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.pause()
+                setState(PlaybackStateCompat.STATE_PAUSED)
+            }
+        }
+    }
+
+    private fun stopPlaying() {
+        removeAudioFocus()
+        mediaSession.isActive = false
+        mediaPlayer?.let { mediaPlayer ->
+            if (mediaPlayer.isPlaying) {
+                mediaPlayer.stop()
+                setState(PlaybackStateCompat.STATE_STOPPED)
+            }
+        }
+    }
 
 }
